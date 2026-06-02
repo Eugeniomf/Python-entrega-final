@@ -5,6 +5,8 @@ st.set_page_config(page_title="Análisis Bancario", layout="wide")
 st.title("Análisis de Datos Bancarios")
 df = pd.read_csv('data/processed/p4ds-dataset-bancario-limpio.csv')
 
+df['Monto USD'] = pd.to_numeric(df['Monto USD'], errors='coerce')
+
 df['Fecha'] = pd.to_datetime(df['Fecha'])
 productos_prestamo = ['Préstamo Consumo', 'Préstamo Automotor', 'Préstamo Hipotecario']
 
@@ -48,16 +50,10 @@ st.dataframe(df_filtrado)
 
 # -------------------- Resumen Estadístico --------------------
 
-st.subheader("Resumen Estadístico")
-st.markdown("""
-Las siguientes estadísticas corresponden a la columna **Monto USD**.
 
-Refiere al monto otorgado por las distintas sucursales en concepto de préstamos. 
-
-Podemos filtrar según interese, por sucursal, producto, estado de mora e inclusive por uso de la app.
-""")
 
 st.subheader("Distribución por Tipo de Préstamo")
+
 
 prestamos = df_filtrado[df_filtrado['Producto'].isin(productos_prestamo)]
 conteo = prestamos['Producto'].value_counts()
@@ -72,24 +68,33 @@ with col3:
     st.metric("Préstamo Hipotecario", conteo.get('Préstamo Hipotecario', 0))
 
 
+st.subheader("Resumen Estadístico")
+st.markdown("""
+Las siguientes estadísticas corresponden a la columna **Monto USD**.
+
+Refiere al monto otorgado por las distintas sucursales en concepto de préstamos. 
+
+Podemos filtrar según interese, por sucursal, producto, estado de mora e inclusive por uso de la app.
+""")
+
 
 col1, col2, col3, col4 = st.columns(4)
 
 with col1:
-    st.metric("Media", round(df_filtrado['Monto USD'].mean(), 2))
-    st.metric("Mediana", round(df_filtrado['Monto USD'].median(), 2))
+    st.metric("Media", round(prestamos['Monto USD'].mean(), 2))
+    st.metric("Mediana", round(prestamos['Monto USD'].median(), 2))
 
 with col2:
-    st.metric("Desv. Estándar", round(df_filtrado['Monto USD'].std(), 2))
-    st.metric("Rango", round(df_filtrado['Monto USD'].max() - df_filtrado['Monto USD'].min(), 2))
+    st.metric("Desv. Estandar", round(prestamos['Monto USD'].std(), 2))
+    st.metric("Rango", round(prestamos['Monto USD'].max() - prestamos['Monto USD'].min(), 2))
 
 with col3:
-    st.metric("Máximo", round(df_filtrado['Monto USD'].max(), 2))
+    st.metric("Q1 (25%)", round(prestamos['Monto USD'].quantile(0.25), 2))
+    st.metric("Q2 (50%)", round(prestamos['Monto USD'].quantile(0.50), 2))
 
 with col4:
-    st.metric("Q1 (25%)", round(df_filtrado['Monto USD'].quantile(0.25), 2))
-    st.metric("Q2 (50%)", round(df_filtrado['Monto USD'].quantile(0.50), 2))
-    st.metric("Q3 (75%)", round(df_filtrado['Monto USD'].quantile(0.75), 2))
+    st.metric("Q3 (75%)", round(prestamos['Monto USD'].quantile(0.75), 2))
+    st.metric("Maximo", round(prestamos['Monto USD'].max(), 2))
 
 #  -------------------- Gráficos  --------------------
 
@@ -204,7 +209,9 @@ st.plotly_chart(fig4, use_container_width=True)
 
 st.subheader("Monto Total por Vendedor")
 
-st.markdown("Dinero que gestionó cada vendedor según sucursal y tipo de préstamo.")
+st.markdown(""
+"Dinero que gestionó cada vendedor según sucursal y tipo de préstamo."
+"Sirve para ver la performance de cada vendedor analizando por producto y sucursal")
 
 col1, col2 = st.columns(2)
 
