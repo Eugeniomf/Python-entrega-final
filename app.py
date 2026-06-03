@@ -24,9 +24,15 @@ productos = ['Todos'] + sorted(df['Producto'].unique().tolist())
 producto_seleccionado = st.sidebar.selectbox('Producto', productos)
 
 # Estado de la App
-estados = ['Todos'] + sorted(df['Estado App'].unique().tolist())
-estado_seleccionado = st.sidebar.selectbox('Estado App', estados)
+monto_min = int(df['Monto USD'].min())
+monto_max = int(df['Monto USD'].max())
 
+rango_monto = st.sidebar.slider(
+    'Rango de Monto USD',
+    min_value=monto_min,
+    max_value=monto_max,
+    value=(monto_min, monto_max)
+)
 # Estado Mora
 estados_mora = ['Todos'] + sorted(df['estado_mora'].dropna().unique().tolist())
 estado_mora_seleccionado = st.sidebar.selectbox('Estado Mora', estados_mora)
@@ -40,20 +46,34 @@ if sucursal_seleccionada != 'Todas':
 if producto_seleccionado != 'Todos':
     df_filtrado = df_filtrado[df_filtrado['Producto'] == producto_seleccionado]
 
-if estado_seleccionado != 'Todos':
-        df_filtrado = df_filtrado[df_filtrado['Estado App'] == estado_seleccionado]
+df_filtrado = df_filtrado[
+    (df_filtrado['Monto USD'] >= rango_monto[0]) |
+    (df_filtrado['Monto USD'].isna())
+]
+df_filtrado = df_filtrado[
+    (df_filtrado['Monto USD'] <= rango_monto[1]) |
+    (df_filtrado['Monto USD'].isna())
+]
 
 if estado_mora_seleccionado != 'Todos':
             df_filtrado = df_filtrado[df_filtrado['estado_mora'] == estado_mora_seleccionado]
 
-st.dataframe(df_filtrado)
+st.subheader("Notas de Análisis:")
+
+st.info("""
+**Estado de la App** refleja qué clientes están registrados y activos en la plataforma digital. 
+Cruzándolo con **Producto** o **Vendedor** podés identificar qué productos o ejecutivos tienen 
+mejor performance en la fidelización digital de clientes.
+""")
+st.info("""
+**Estado de Mora** fue incorporado por el docente como columna adicional. Se decidió conservarla 
+ya que permite cruzar el estado crediticio con el tipo y monto de préstamo, siendo útil para 
+evaluar el riesgo asociado a cada producto.
+""")
 
 # -------------------- Resumen Estadístico --------------------
 
-
-
 st.subheader("Distribución por Tipo de Préstamo")
-
 
 prestamos = df_filtrado[df_filtrado['Producto'].isin(productos_prestamo)]
 conteo = prestamos['Producto'].value_counts()
